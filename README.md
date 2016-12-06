@@ -31,10 +31,9 @@ This project has been tested on the following ESP8266 based development boards:-
 Azure Event Hubs is designed for internet scale data ingestion. 
 
 [Stream Analytics](https://azure.microsoft.com/en-us/services/stream-analytics/), 
-[Power Bi](https://powerbi.microsoft.com/en-us/) and preconfigured IoT Hub solutions such as 
+[Power Bi](https://powerbi.microsoft.com/en-us/) and preconfigured IoT solutions such as 
 [Remote monitoring ](https://azure.microsoft.com/en-us/documentation/articles/iot-suite-remote-monitoring-sample-walkthrough) provide ways to visualise and unlock the value of your data in Azure.
 
-For more background information read this "[Stream Analytics & Power BI: A real-time analytics dashboard for streaming data](https://azure.microsoft.com/en-us/documentation/articles/stream-analytics-power-bi-dashboard/)" article.
 
 ###Acknowledgments
 This project is a fork of [Dave Grove's project](https://github.com/gloveboxes/Arduino-ESP8266-Secure-Azure-IoT-Hub-Client), and has been slightly modified to make use of Event Hub and Different Types of Sensors, and has prior references to the below projects.
@@ -45,17 +44,16 @@ This project is a fork of [Dave Grove's project](https://github.com/gloveboxes/A
 
 #Setup and Deployment Summary
 
-1. Setup your Azure Event Hub.
-2. Register your device with Azure IoT Hub.
-3. Update the main AzureClient.ino sketch
-4. Deploy the solution to your ESP8266 based device.
-5. View data with Azure Storage Explorer
-6. Optionally: Visualise your data in real time with Azure Stream Analytics and Power BI.
+1. Setup your Azure Event Hub..
+2. Update the main AzureClient.ino and Publish.ino sketch
+3. Deploy the solution to your ESP8266 based device.
+4. View data with Azure Storage Explorer
+5. Optionally: Visualise your data in real time with Azure Stream Analytics and Power BI.
 
 
-#Setting Up Azure IoT Hub
+#Setting Up Azure Event Hub
 
-Follow the instructions on Azure documentations [Create an Event Hub](https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-csharp-ephcs-getstarted#create-an-event-hub) to create your own Event Hub, Access Policy and Key
+Follow the instructions on Azure documentations [Create an Event Hub](https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-csharp-ephcs-getstarted#create-an-event-hub) to create your own Event Hub, Access Policy and Key. We recommend creating 2 Eventhub namely "eventhubalerts" and "eventhubdevices".
 
 
 #Azure Configuration
@@ -81,23 +79,6 @@ The function initCloudConfig() called from the setup() function in AzureClient.i
     
 
 
-##Optional EEPROM Configuration
-
-You can burn cloud and network configuration information to the device EEPROM.  To configure the EEPROM open the SetEEPROMConfiguration.ino found in the SetEEPROMConfiguration folder and update the following variables:-
-
-  - Wi-Fi SSID and password pairs, put in priority order.
-  - Wifi - Is the number of WiFi ssid and password pairs
-  - Azure IoT Hub or Event Bus Host name eg "MakerDen.azure-devices.net", Device ID, and Key. For IoT Hub get this information from the Device Explorer, for Event Hub, get from Azure Management Portal.
-  - Geo location of the device
-  
-Upload this sketch to the device to write configuration settings to EEPROM.
-
-**Be sure to call function initCloudConfig() with no parameters to ensure Azure and Network parameters are read from EEPROM.**
-
-
-Next upload the AzureClient sketch which will 
-read this configuration information from the EEPROM. 
-
 
 #Device Configuration 
 
@@ -112,7 +93,7 @@ You need to configure the initDeviceConfig() function in the AzureClient.ino fil
         cloud.sasExpiryDate = 1737504000;    // Expires Wed, 22 Jan 2025 00:00:00 GMT (defaults to Expires Wed, 22 Jan 2025 00:00:00 GMT)
     }   
 
-You will also need to input your event hub name in the Publish.ino file.  
+You will also need to input your event hub name in the Publish.ino file. If you have followed the above example, you can use "eventhubdevices" below.
     
     // Azure Event Hub settings
     const char* EVENT_HUB_END_POINT ="/<youreventhubname>/publishers/sender/messages";
@@ -122,9 +103,9 @@ Then upload the sketch to your device.
 
 #Viewing Data
 
-From Device Explorer, head to the Data tab, select your device, enable consumer group then click Monitor.
+If you would like to view the raw telemetry which are being sent into event hub, follow the guide below to create your own EventHostProcessor
 
-![IoT Hub Data](https://raw.githubusercontent.com/gloveboxes/Arduino-NodeMCU-ESP8266-Secure-Azure-IoT-Hub-Client/master/AzureClient/Fritzing/IoTHubData.JPG)
+[receive messages with eventprocessorhost](https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-csharp-ephcs-getstarted#receive-messages-with-eventprocessorhost)
 
 
 #Visualising Data
@@ -134,7 +115,7 @@ From Device Explorer, head to the Data tab, select your device, enable consumer 
 [Azure Stream Analytics](https://azure.microsoft.com/en-us/services/stream-analytics/) enables you to gain 
 real-time insights in to your device, sensor, infrastructure, and application data.
 
-See the [Visualizing IoT Data](http://thinglabs.io/workshop/cs/nightlight/visualize-iot-with-powerbi/) lab.  Replace the query in that lab with the following and be sure to change the time zone to your local time zone offset.  Australia (AEDST) is currently +11 hours.
+See the [Visualizing IoT Data](http://thinglabs.io/workshop/cs/nightlight/visualize-iot-with-powerbi/) lab.  Replace the query in that lab with the following.
 
     With 
 
@@ -160,17 +141,6 @@ See the [Visualizing IoT Data](http://thinglabs.io/workshop/cs/nightlight/visual
 
 Follow the notes in the See the [Visualizing IoT Data](http://thinglabs.io/workshop/cs/nightlight/visualize-iot-with-powerbi/) lab and modify the real time report as per this image.
 
-###Power BI Designer Setup
-
-![Power BI Designer Setup](https://raw.githubusercontent.com/gloveboxes/Arduino-NodeMCU-ESP8266-Secure-Azure-IoT-Hub-Client/master/AzureClient/Fritzing/PowerBIDesigner.JPG)
-
-
-###Power BI Report Viewer
-
-View on the web or with the Power BI apps available on iOS, Android and Windows.
-
-![Power BI Report Viewer](https://raw.githubusercontent.com/gloveboxes/Arduino-NodeMCU-ESP8266-Secure-Azure-IoT-Hub-Client/master/AzureClient/Fritzing/PowerBIReport.JPG)
-
 
 
 #Data Schema
@@ -181,37 +151,4 @@ The AzureClient sketch streams data in the following JSON format, of course you 
     {"Dev":"sender","Utc":"2016-11-25T06:45:04","Celsius":24.75,"Lux":886,"Motion":0,"Gas":0,"Geo":"MS SG MIC","WiFi":1,"Mem":19016,"Id":1}
 
  
-#Software Requirements
 
-##Drivers
-
-1. NodeMCU - On Windows, Mac and Linux you will need to install the latest [CP210x USB to UART Bridge VCP Drivers](https://www.silabs.com/products/mcu/Pages/USBtoUARTBridgeVCPDrivers.aspx).
-2. WeMos - On Windows and Mac install the latest [Ch340G drivers](http://www.wemos.cc/Tutorial/get_started_in_arduino.html). No drivers required for Linux.
-3. [ESP8266 Thing Development Board Hookup Guide](https://learn.sparkfun.com/tutorials/esp8266-thing-development-board-hookup-guide/hardware-setup)
-
-
-##Arduino IDE
-
-As at April 2015 use:-
-
-1. [Arduino IDE 1.6.8](https://www.arduino.cc/en/Main/Software).
-2. ESP8266 Board Manager 2.1 or better required for HTTPS/TLS Secure Client support.
-
-##Visual Studio
-
-There an fantastic plugin for Visual Studio that adds Arduino support from [Visual Micro](http://www.visualmicro.com/).  IntelliSence, auto complete, debugging, it doesn't get much better:)
-
-##Arduino Boards Manager ESP8266 Support
-
-Arduino version 1.6.5 and above allows installation of third-party platform packages using Boards Manager.
-
-1. Install Arduino 1.6.5 from the Arduino website.
-2. Start Arduino and open Preferences window.
-3. Enter http://arduino.esp8266.com/stable/package_esp8266com_index.json  into Additional Board Manager URLs field. You can add multiple URLs, separating them with commas.
-4. Open Boards Manager from Tools > Board menu and install esp8266 platform (and don't forget to select your ESP8266 board from Tools > Board menu after installation).
-5. Select NodeMCU or WeMos D1 Mini Board: Tools -> Board -> NodeMCU 1.0 (ESP-12E module) or WeMos D1 Mini
-6. Set Port and Upload Speed: Tools.  Note, you may need to try different port speeds to successfully flash the device. Faster is better as each time you upload the code to your device you are re-flashing the complete ROM not just your code.
-
-#ESP8266 Arduino Core Documentation 
-
-Be sure to read the [ESP8266 Arduino Core Documentation](http://esp8266.github.io/Arduino/versions/2.0.0/) - there are some minor gotchas.
