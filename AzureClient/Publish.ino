@@ -9,7 +9,7 @@ const char* TARGET_URL = "/devices/";
 const char* IOT_HUB_END_POINT = "/messages/events?api-version=2015-08-15-preview";
 
 // Azure Event Hub settings
-const char* EVENT_HUB_END_POINT = "/ehdevices/publishers/nodemcu/messages";
+const char* EVENT_HUB_END_POINT ="/<youreventhubname>/publishers/sender/messages";
 
 int sendCount = 0;
 char buffer[256];
@@ -52,11 +52,20 @@ void connectToAzure() {
   if (!tlsClient.connect(cloud.host, 443)) {      // Use WiFiClientSecure class to create TLS connection
     Serial.print("Host connection failed.  WiFi IP Address: ");
     Serial.println(WiFi.localIP());
-
+    
+    Serial.println("Authentication key is: ");
+    Serial.println(cloud.fullSas);
+     Serial.println("EVENT_HUB_END_POINT key is: ");
+    Serial.println(cloud.endPoint);
+      Serial.println("Host key is: ");
+    Serial.println(cloud.host);
+    
     delay(2000);
   }
   else {
     Serial.println("Host connected");
+     String s = WiFi.macAddress();
+  Serial.println(s);
     yield(); // give firmware some time 
 //    delay(250); // give network connection a moment to settle
   }
@@ -124,9 +133,9 @@ String serializeData(SensorData data){
   root["Dev"] = cloud.id;
   root["Utc"] = GetISODateTime();
   root["Celsius"] = data.temperature;
-  root["Humidity"] = data.humidity;
-  root["hPa"] = data.pressure;
-  root["Light"] = data.light;
+  root["Lux"] = data.light;
+  root["Motion"] = data.motion;
+  root["Gas"] = data.gas;
   root["Geo"] = cloud.geo;  
 
   //instrumentation
@@ -135,7 +144,7 @@ String serializeData(SensorData data){
   root["Id"] = ++sendCount;
 
   root.printTo(buffer, sizeof(buffer));
-
+  root.printTo(Serial);
   return (String)buffer;
 }
 
@@ -174,7 +183,7 @@ void publishToAzure() {
       response += chunk;
     }
   } while (chunk.length() > 0 && ++limit < 100);  
-
+ Serial.println("");
   Serial.print("Bytes sent ");
   Serial.print(bytesWritten);
   Serial.print(", Memory ");
@@ -187,7 +196,7 @@ void publishToAzure() {
   
   if (response.length() > 12) { Serial.println(response.substring(9, 12)); }
   else { Serial.println("unknown"); }
-
+delay(1000);
   setLedState(On);
 }
 
