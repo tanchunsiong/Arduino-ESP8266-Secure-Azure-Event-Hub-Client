@@ -14,9 +14,6 @@ This solution securely streams sensor data directly to
 
 The [ESP8266](https://en.wikipedia.org/wiki/ESP8266) is a device based out of Espressif ESP8266 which comes with integrated WiFi. 
 
-This project has been tested on the following ESP8266 based development boards:-
-
-1. [NodeMCU V2 (also known as V1.0)](https://en.wikipedia.org/wiki/NodeMCU)
 
 
 ###Firmware
